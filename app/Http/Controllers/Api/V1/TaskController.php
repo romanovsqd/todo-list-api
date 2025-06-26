@@ -3,25 +3,30 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexTaskRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 
 class TaskController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(IndexTaskRequest $request): JsonResponse
     {
-        $tasks = Task::query()->paginate(10);
+        $tasks = Task::query()
+            ->isCompleted($request->is_completed)
+            ->applySort($request->sort_by)
+            ->paginate(10);
 
         return response()->json([
             'tasks' => $tasks,
         ]);
     }
 
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request): JsonResponse
     {
         $taskData = $request->validated();
 
@@ -34,14 +39,14 @@ class TaskController extends Controller
         ]);
     }
 
-    public function show(Task $task)
+    public function show(Task $task): JsonResponse
     {
         return response()->json([
             'task' => $task,
         ]);
     }
 
-    public function update(UpdateTaskRequest $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task): JsonResponse
     {
         $this->authorize('edit', $task);
 
@@ -54,7 +59,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function destroy(Task $task)
+    public function destroy(Task $task): JsonResponse
     {
         $this->authorize('delete', $task);
 
