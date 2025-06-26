@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\IndexTaskRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -17,12 +18,13 @@ class TaskController extends Controller
     public function index(IndexTaskRequest $request): JsonResponse
     {
         $tasks = Task::query()
+            ->with(['user:id,name,email'])
             ->isCompleted($request->is_completed)
             ->applySort($request->sort_by)
             ->paginate(10);
 
         return response()->json([
-            'tasks' => $tasks,
+            'tasks' => TaskResource::collection($tasks),
         ]);
     }
 
@@ -35,14 +37,16 @@ class TaskController extends Controller
         $task = Task::create($taskData);
 
         return response()->json([
-            'task' => $task,
+            'tasks' => TaskResource::make($task),
         ]);
     }
 
     public function show(Task $task): JsonResponse
     {
+        $task->load(['user']);
+
         return response()->json([
-            'task' => $task,
+            'task' => TaskResource::make($task),
         ]);
     }
 
@@ -55,7 +59,7 @@ class TaskController extends Controller
         $task->update($taskData);
 
         return response()->json([
-            'task' => $task,
+            'tasks' => TaskResource::make($task),
         ]);
     }
 
