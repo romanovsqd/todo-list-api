@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
@@ -13,19 +14,16 @@ class TaskController extends Controller
 
     public function index()
     {
-        $tasks = Task::all();
+        $tasks = Task::query()->paginate(10);
 
         return response()->json([
             'tasks' => $tasks,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $taskData = $request->validate([
-            'title' => ['required', 'string', 'max:255', 'min:3'],
-            'description' => ['nullable', 'string', 'max:255'],
-        ]);
+        $taskData = $request->validated();
 
         $taskData['user_id'] = auth()->id();
 
@@ -43,15 +41,11 @@ class TaskController extends Controller
         ]);
     }
 
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
         $this->authorize('edit', $task);
 
-        $taskData = $request->validate([
-            'title' => ['required', 'string', 'max:255', 'min:3'],
-            'description' => ['nullable', 'string', 'max:255'],
-            'is_completed' => ['boolean'],
-        ]);
+        $taskData = $request->validate();
 
         $task->update($taskData);
 
