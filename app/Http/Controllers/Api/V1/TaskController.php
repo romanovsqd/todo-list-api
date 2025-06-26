@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
         $tasks = Task::all();
@@ -42,6 +45,8 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
+        $this->authorize('edit', $task);
+
         $taskData = $request->validate([
             'title' => ['required', 'string', 'max:255', 'min:3'],
             'description' => ['nullable', 'string', 'max:255'],
@@ -57,6 +62,8 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
+        $this->authorize('delete', $task);
+
         $task->delete();
 
         return response()->json([
